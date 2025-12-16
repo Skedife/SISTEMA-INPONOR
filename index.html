@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calificaciones Modelo Centro INPONOR - PLE-RD</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Calificaciones Modelo Centro INPONOR - PLE-RD</h1>
+            <p>Sistema de Evaluación - Modelo de Naciones Unidas</p>
+        </div>
+
+        <!-- PANTALLA DE LOGIN -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-box">
+                <h2>Acceso al Sistema</h2>
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('admin')">👨‍💼 Admin</button>
+                    <button class="tab-btn" onclick="switchTab('qr')">📱 QR Estudiante</button>
+                </div>
+
+                <!-- LOGIN ADMIN -->
+                <div id="adminLogin">
+                    <div class="input-group">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" id="emailInput" placeholder="tucorreo@gmail.com">
+                    </div>
+                    <div class="input-group">
+                        <label>Contraseña:</label>
+                        <input type="password" id="passwordInput" placeholder="••••••••">
+                    </div>
+                    <button class="btn btn-primary" onclick="loginAdmin()">Iniciar Sesión</button>
+                </div>
+
+                <!-- LOGIN QR -->
+                <div id="qrLogin" class="hidden">
+                    <div class="input-group">
+                        <label>Código de Estudiante:</label>
+                        <input type="text" id="studentCode" placeholder="Ej: OMT1-001">
+                    </div>
+                    <button class="btn btn-primary" onclick="loginStudent()">Ver Mis Calificaciones</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE PASE DE LISTA POR PAÍSES (OBLIGATORIO) -->
+        <div id="paseListaScreen" class="pase-lista-screen">
+            <div class="pase-lista-container-compact">
+                <div class="pase-lista-header-compact">
+                    <h2>📋 Pase de Lista - Vista por Países</h2>
+                    <div class="pase-lista-subtitle">
+                        Grupo: <strong id="paseListaGroupCompact">OMT1</strong> • 
+                        <span id="paseListaDateCompact"></span>
+                    </div>
+                    <p style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+                        Marca el estado del país completo. Todos los delegados cambiarán al mismo estado.
+                    </p>
+                </div>
+                
+                <div class="pase-lista-search-compact">
+                    <input type="text" id="paseListaSearchCompact" 
+                           placeholder="🔍 Buscar país..." 
+                           autofocus>
+                </div>
+                
+                <div class="pase-lista-stats-compact">
+                    <div class="pase-lista-stat-compact">
+                        <div class="pase-lista-stat-value-compact" id="totalPaisesCompact">0</div>
+                        <div class="pase-lista-stat-label">Total Países</div>
+                    </div>
+                    <div class="pase-lista-stat-compact presente">
+                        <div class="pase-lista-stat-value-compact" id="paisesPresentesCompact">0</div>
+                        <div class="pase-lista-stat-label">Países Presentes</div>
+                    </div>
+                    <div class="pase-lista-stat-compact votando">
+                        <div class="pase-lista-stat-value-compact" id="paisesVotandoCompact">0</div>
+                        <div class="pase-lista-stat-label">Países Votando</div>
+                    </div>
+                    <div class="pase-lista-stat-compact ausente">
+                        <div class="pase-lista-stat-value-compact" id="paisesAusentesCompact">0</div>
+                        <div class="pase-lista-stat-label">Países Ausentes</div>
+                    </div>
+                </div>
+                
+                <div id="paseListaBodyCompact" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Se llenará dinámicamente con los países -->
+                </div>
+                
+                <div class="pase-lista-buttons-compact">
+                    <button class="btn-guardar-compact" onclick="guardarPaseListaCompact()">💾 Guardar</button>
+                    <button class="btn-estudiantes-compact" onclick="irAPaseEstudiantes()">👤 Ver por Estudiantes</button>
+                    <button class="btn-continuar-compact" onclick="continuarAAdmin()">✅ Continuar a Admin</button>
+                    <button class="btn-cancelar-compact" onclick="cancelarPaseListaCompact()">✖️ Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE PASE DE LISTA POR ESTUDIANTES -->
+        <div id="paseEstudiantesScreen" class="pase-estudiantes-screen">
+            <div class="pase-lista-container-compact">
+                <div class="pase-lista-header-compact" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                    <h2>👤 Pase de Lista - Vista por Estudiantes</h2>
+                    <div class="pase-lista-subtitle">
+                        Grupo: <strong id="paseEstudiantesGroup">OMT1</strong> • 
+                        <span id="paseEstudiantesDate"></span>
+                    </div>
+                    <p style="font-size: 11px; margin-top: 5px; opacity: 0.8;">
+                        Marca el estado individual de cada estudiante.
+                    </p>
+                </div>
+                
+                <div class="pase-lista-search-compact">
+                    <input type="text" id="paseEstudiantesSearch" 
+                           placeholder="🔍 Buscar por nombre, país o código..." 
+                           autofocus>
+                </div>
+                
+                <div class="pase-lista-stats-compact">
+                    <div class="pase-lista-stat-compact">
+                        <div class="pase-lista-stat-value-compact" id="totalEstudiantesDetallado">0</div>
+                        <div class="pase-lista-stat-label">Total Estudiantes</div>
+                    </div>
+                    <div class="pase-lista-stat-compact presente">
+                        <div class="pase-lista-stat-value-compact" id="estudiantesPresentesDetallado">0</div>
+                        <div class="pase-lista-stat-label">Presentes</div>
+                    </div>
+                    <div class="pase-lista-stat-compact votando">
+                        <div class="pase-lista-stat-value-compact" id="estudiantesVotandoDetallado">0</div>
+                        <div class="pase-lista-stat-label">Votando</div>
+                    </div>
+                    <div class="pase-lista-stat-compact ausente">
+                        <div class="pase-lista-stat-value-compact" id="estudiantesAusentesDetallado">0</div>
+                        <div class="pase-lista-stat-label">Ausentes</div>
+                    </div>
+                </div>
+                
+                <div id="paseEstudiantesBody" style="max-height: 350px; overflow-y: auto; padding-right: 5px;">
+                    <!-- Se llenará dinámicamente con los estudiantes -->
+                </div>
+                
+                <div class="pase-lista-buttons-compact">
+                    <button class="btn-guardar-compact" onclick="guardarPaseEstudiantes()">💾 Guardar</button>
+                    <button class="btn-continuar-compact" onclick="volverAPaises()">📋 Volver a Países</button>
+                    <button class="btn-continuar-compact" onclick="continuarAAdmin()">✅ Continuar a Admin</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- VISTA ADMIN -->
+        <div id="adminView" class="admin-view">
+            <div class="admin-header" id="adminHeader">
+                <!-- Se llena dinámicamente -->
+            </div>
+
+            <!-- INFORMACIÓN DE PESOS BASADA EN LA RÚBRICA PLE-RD -->
+            <div class="weights-info">
+                <h3 style="font-size: 14px; margin-bottom: 5px;">📊 Rúbrica de Evaluación PLE-RD - Competencias y Puntajes</h3>
+                <div class="weights-grid">
+                    <div class="weight-item"><strong>1. Investigación y análisis crítico (30 pts)</strong><br>• Investigación académica: 15 pts<br>• Pensamiento crítico: 15 pts</div>
+                    <div class="weight-item"><strong>2. Comunicación y lenguaje (30 pts)</strong><br>• Oratoria: 10 pts<br>• Argumentación: 10 pts<br>• Redacción: 10 pts</div>
+                    <div class="weight-item"><strong>3. Negociación y resolución de conflictos (20 pts)</strong><br>• Negociación: 10 pts<br>• Resolución de conflictos: 10 pts</div>
+                    <div class="weight-item"><strong>4. Liderazgo y colaboración (20 pts)</strong><br>• Liderazgo: 10 pts<br>• Colaboración: 10 pts</div>
+                </div>
+            </div>
+
+            <div class="controls-row">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar estudiante..." onkeyup="searchStudents()">
+                </div>
+                
+                <div class="sort-controls">
+                    <label>Ordenar por:</label>
+                    <select id="sortSelect" onchange="sortStudents()">
+                        <option value="name">Nombre (A-Z)</option>
+                        <option value="name-desc">Nombre (Z-A)</option>
+                        <option value="code">Código</option>
+                        <option value="pais">País</option>
+                        <option value="grade">Calificación (Mayor a Menor)</option>
+                        <option value="grade-asc">Calificación (Menor a Mayor)</option>
+                    </select>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn-action btn-add" onclick="addStudent()">➕ Agregar</button>
+                    <button class="btn-action btn-pase-paises" onclick="showPasePaisesDesdeAdmin()">📋 Pase por Países</button>
+                    <button class="btn-action btn-pase-estudiantes" onclick="showPaseEstudiantesDesdeAdmin()">👤 Pase por Estudiantes</button>
+                    <button class="btn-action btn-export" onclick="exportToExcel()">📊 Excel</button>
+                    <button class="btn-action btn-stats" onclick="showStatistics()">📈 Estadísticas</button>
+                    <button class="btn-action btn-save" onclick="saveData()">💾 Guardar</button>
+                </div>
+            </div>
+
+            <div class="excel-table-container">
+                <table class="excel-table" id="gradesTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 40px;">#</th>
+                            <th style="min-width: 180px;">Estudiante</th>
+                            <th class="competencia-header" colspan="2">1. Investigación y análisis crítico (30 pts)</th>
+                            <th class="competencia-header" colspan="3">2. Comunicación y lenguaje (30 pts)</th>
+                            <th class="competencia-header" colspan="2">3. Negociación y resolución de conflictos (20 pts)</th>
+                            <th class="competencia-header" colspan="2">4. Liderazgo y colaboración (20 pts)</th>
+                            <th style="width: 90px;">PROMEDIO FINAL</th>
+                            <th style="width: 130px;">Acciones</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th>Nombre, País y Código</th>
+                            <th class="subcompetencia-header">Investigación académica (15 pts)</th>
+                            <th class="subcompetencia-header">Pensamiento crítico (15 pts)</th>
+                            <th class="subcompetencia-header">Oratoria (10 pts)</th>
+                            <th class="subcompetencia-header">Argumentación (10 pts)</th>
+                            <th class="subcompetencia-header">Redacción (10 pts)</th>
+                            <th class="subcompetencia-header">Negociación (10 pts)</th>
+                            <th class="subcompetencia-header">Resolución de conflictos (10 pts)</th>
+                            <th class="subcompetencia-header">Liderazgo (10 pts)</th>
+                            <th class="subcompetencia-header">Colaboración (10 pts)</th>
+                            <th>Nota /100</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="gradesBody">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- VISTA ESTUDIANTE -->
+        <div id="studentView" class="student-view">
+            <div class="student-card">
+                <h2 id="studentName">Nombre del Estudiante</h2>
+                <p id="studentComite">País</p>
+                <p style="font-size: 13px; margin-top: 8px;" id="studentCodeDisplay">Código</p>
+            </div>
+            
+            <div class="grades-grid">
+                <div class="grade-item">
+                    <h3>🔍 Investigación y análisis crítico</h3>
+                    <div class="grade-value" id="grade1">0/30</div>
+                    <p style="font-size: 12px; margin-top: 8px; color: #666;">
+                        • Investigación académica: <span id="detail1a">0</span>/15<br>
+                        • Pensamiento crítico: <span id="detail1b">0</span>/15
+                    </p>
+                </div>
+                <div class="grade-item">
+                    <h3>🗣️ Comunicación y lenguaje</h3>
+                    <div class="grade-value" id="grade2">0/30</div>
+                    <p style="font-size: 12px; margin-top: 8px; color: #666;">
+                        • Oratoria: <span id="detail2a">0</span>/10<br>
+                        • Argumentación: <span id="detail2b">0</span>/10<br>
+                        • Redacción: <span id="detail2c">0</span>/10
+                    </p>
+                </div>
+                <div class="grade-item">
+                    <h3>🤝 Negociación y resolución de conflictos</h3>
+                    <div class="grade-value" id="grade3">0/20</div>
+                    <p style="font-size: 12px; margin-top: 8px; color: #666;">
+                        • Negociación: <span id="detail3a">0</span>/10<br>
+                        • Resolución de conflictos: <span id="detail3b">0</span>/10
+                    </p>
+                </div>
+                <div class="grade-item">
+                    <h3>👥 Liderazgo y colaboración</h3>
+                    <div class="grade-value" id="grade4">0/20</div>
+                    <p style="font-size: 12px; margin-top: 8px; color: #666;">
+                        • Liderazgo: <span id="detail4a">0</span>/10<br>
+                        • Colaboración: <span id="detail4b">0</span>/10
+                    </p>
+                </div>
+            </div>
+            
+            <div class="final-grade-card">
+                <h2>🏆 CALIFICACIÓN FINAL</h2>
+                <div class="final-grade-value" id="studentFinalGrade">0</div>
+                <p style="font-size: 14px; margin-top: 8px;">de 100 puntos</p>
+            </div>
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="logout()">Salir</button>
+        </div>
+    </div>
+
+    <!-- MODAL QR -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content">
+            <h2>Código QR del Estudiante</h2>
+            <p id="qrStudentName" style="margin-bottom: 10px; color: #666; font-size: 14px;"></p>
+            <div id="qrcode"></div>
+            <p style="font-size: 11px; color: #666; margin-top: 8px;">
+                El estudiante puede escanear este código para ver sus calificaciones
+            </p>
+            <button class="btn-close" onclick="closeQRModal()" style="background: #666; color: white;">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR ESTUDIANTE -->
+    <div id="editModal" class="modal">
+        <div class="modal-content modal-edit">
+            <h2>✏️ Editar Estudiante</h2>
+            <div class="edit-form" id="editForm">
+                <!-- Se llenará dinámicamente -->
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="btn-close" onclick="closeEditModal()" style="background: #666; color: white;">Cancelar</button>
+                <button class="btn-close" onclick="saveEdit()" style="background: #4CAF50; color: white;">Guardar Cambios</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
